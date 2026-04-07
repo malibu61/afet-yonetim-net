@@ -1,3 +1,10 @@
+# README — .NET project (`afet-yonetim-net`)
+
+This solution is the ASP.NET Core Web API layer that reads from Kafka and serves clients. Two background Kafka consumers run continuously: one subscribes to the Debezium/Postgres CDC topic (`DepremTopic`), parses `payload.after`, and keeps recent earthquakes in an in-memory `DepremStore` (the list is capped, e.g. last 50). The other subscribes to the risk topic (`RisksTopic`), deserializes the province risk snapshot, and stores it in `IlRiskStore`. REST endpoints: `GET api/Deprem` returns the in-memory earthquake list; `GET api/Risks` returns the latest risk snapshot; `GET api/AISupportedRisk` returns the same snapshot plus a short natural-language summary (`explain`) from GitHub Models (Azure inference API). If the token is missing or the AI call fails, the API returns a clear HTTP error. Swagger is enabled in Development; CORS is set so the Next.js app can call the API from the browser.
+
+Configure `Kafka` and `GitHubModels` in `appsettings.json` (bootstrap servers, topic names, consumer group IDs, PAT, model name). Do not commit secrets; use User Secrets in development. Run with `dotnet restore` and `dotnet run` from the project folder. Per `Properties/launchSettings.json`, the app listens on **https://localhost:7232** and **http://localhost:5108**; Swagger is usually at `https://localhost:7232/swagger`. Kafka is expected at `localhost:9092` by default; topic names must match Python and Debezium. Outbound HTTP for AI uses the base URL `https://models.inference.ai.azure.com/` (see `Program.cs`).
+
+In short: .NET consumes Kafka, keeps earthquakes and risks in memory, exposes REST (and optional AI text) to the frontend; Python and the DB/CDC pipeline produce the Kafka messages.
 <img width="1028" height="254" alt="image" src="https://github.com/user-attachments/assets/f75a87f7-009b-4325-92f5-12c5afbf23aa" />
 <img width="1348" height="839" alt="image" src="https://github.com/user-attachments/assets/072bc6bb-f356-402f-a935-7752a3540f12" />
 <img width="1339" height="551" alt="image" src="https://github.com/user-attachments/assets/bf1d5a32-65a1-4b95-bac6-a69136f5d882" />
